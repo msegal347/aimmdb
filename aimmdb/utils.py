@@ -38,7 +38,7 @@ def read_group(g, jsoncompat=False):
     return out
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=1)
 def get_element_data():
     """Returns a dictionary containing allowed values for elements and XAS
     edges. Caches its result so it only has to read from disk once.
