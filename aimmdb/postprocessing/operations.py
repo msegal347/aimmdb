@@ -35,7 +35,7 @@ class Operator(MSONable, ABC):
         ...
 
     @abstractmethod
-    def __call__(self, client):
+    def __call__(self, inp):
         ...
 
 
@@ -83,33 +83,21 @@ class UnaryOperator(Operator):
             },
         }
 
-    def _call_on_client(self, client):
-        return {
-            "data": self._process_data(client.read()),
-            "metadata": self._process_metadata(client.metadata),
-        }
-
-    def __call__(self, client):
-        if isinstance(client, DataFrameClient):
-            return self._call_on_client(client)
-
-        elif isinstance(client, Node):
-            # Apply the operator to each of the instances in the node
-            values = [value for value in client.values()]
-            if not all([isinstance(v, DataFrameClient) for v in values]):
-                raise RuntimeError(
-                    "Provided client when iterated on has produced entries "
-                    "that are not DataFrameClient objects. This is likely "
-                    "due to passing a query such as "
-                    'df_client = c["edge"]["K"], when a query like '
-                    'df_client = c["edge"]["K"]["uid"] is required'
-                )
-            return list(map(self._call_on_client, values))
-
+    def __call__(self, inp):
+        if isinstance(inp, DataFrameClient):
+            return {
+                "data": self._process_data(inp.read()),
+                "metadata": self._process_metadata(inp.metadata),
+            }
+        elif isinstance(inp, dict):
+            return {
+                "data": self._process_data(inp["data"]),
+                "metadata": self._process_metadata(inp["metadata"]),
+            }
         else:
             raise ValueError(
-                f"client is of type {type(client)} but should be of "
-                "type DataFrameClient"
+                f"Input type {type(inp)} must be either DataFrameClient or "
+                "dict"
             )
 
 
@@ -237,6 +225,8 @@ class RemoveBackground(UnaryOperator):
         explored for batch processing of multiple spectra
         """
 
+        assert self.x0 < self.xf, "Invalid range, make sure x0 < xf"
+
         bg_data = df.loc[
             (df[self.x_column] >= self.x0) * (df[self.x_column] < self.xf)
         ]
@@ -259,31 +249,34 @@ class RemoveBackground(UnaryOperator):
 
 
 class StandardizeIntensity(UnaryOperator):
-    """Scale the intensity so they vary in similar range. Specifically, aligns
-    the intensity to the mean of a selected range, and scale the intensity up
-    to standard deviation.
+    """Scale the intensity so they vary in similar range. Does this by taking
+    a specific range of the specrum and dividing out a quadratic fit to that
+    region.
 
     Parameters
     ----------
     x0 : float
-        The lower bound of energy range for which the mean is calculated. If None, the first
+        The lower bound of energy range for which the mean is calculated. If
+        None, the first.
         point in the energy grid is used. Default is None.
     yf : float
-        The upper bound of energy range for which the mean is calculated. If None, the last
+        The upper bound of energy range for which the mean is calculated. If
+        None, the last.
         point in the energy grid is used. Default is None.
     x_column : str, optional
-            References a single column in the DataFrameClient (this is the
-            "x-axis"). Default is "energy".
+        References a single column in the DataFrameClient (this is the
+        "x-axis"). Default is "energy".
     y_columns : list, optional
         References a list of columns in the DataFrameClient (these are the
         "y-axes"). Default is ["mu"].
     """
 
-    def __init__(self, *, x0, xf, x_column="energy", y_columns=["mu"]):
+    def __init__(self, *, x0, xf, x_column="energy", y_columns=["mu"], deg=2):
         self.x0 = x0
         self.xf = xf
         self.x_column = x_column
         self.y_columns = y_columns
+        self.deg = deg
 
     def _process_data(self, df):
         """
@@ -293,7 +286,7 @@ class StandardizeIntensity(UnaryOperator):
 
         """
 
-        grid = df.loc[:, self.x_column]
+        grid = np.array(df.loc[:, self.x_column])
         if self.x0 is None:
             self.x0 = grid[0]
         if self.xf is None:
@@ -303,10 +296,14 @@ class StandardizeIntensity(UnaryOperator):
 
         new_data = {self.x_column: df[self.x_column]}
         for column in self.y_columns:
-            mu = df.loc[:, column]
-            mu_mean = mu[select_mean_range].mean()
-            mu_std = mu.std()
-            new_data.update({column: (mu - mu_mean) / mu_std})
+            y = df.loc[:, column]
+            y = y[select_mean_range]
+            x = grid[select_mean_range]
+            try:
+                p0 = np.polyfit(x, y, deg=self.deg)
+            except TypeError:
+                return None  # Range failure
+            new_data.update({column: df.loc[:, column] / np.polyval(p0, grid)})
 
         return pd.DataFrame(new_data)
 
