@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from uuid import uuid4
 
 from monty.json import MSONable
 import numpy as np
@@ -10,9 +9,9 @@ import pandas as pd
 from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn.linear_model import LinearRegression
 from tiled.client.dataframe import DataFrameClient
-from tiled.client.node import Node
 
 from aimmdb.postprocessing import utils
+from aimmdb.uid import uid
 
 
 class Operator(MSONable, ABC):
@@ -74,8 +73,8 @@ class UnaryOperator(Operator):
 
         dt = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         return {
-            "_tiled": {"uid": str(uuid4())},  # Assign a new uid
-            "post_processing": {
+            "_tiled": {"uid": uid()},  # Assign a new uid
+            "_post_processing": {
                 "parents": [metadata["_tiled"]["uid"]],
                 "operator": self.as_dict(),
                 "kwargs": self.__dict__,
