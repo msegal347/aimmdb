@@ -1,7 +1,7 @@
 import dataclasses
-from functools import lru_cache
 import importlib
 import json
+from functools import lru_cache
 
 import h5py
 import pydantic
@@ -42,7 +42,7 @@ def read_group(g, jsoncompat=False):
 def get_element_data():
     """Returns a dictionary containing allowed values for elements and XAS
     edges. Caches its result so it only has to read from disk once.
-    
+
     Returns
     -------
     dict

@@ -1,7 +1,7 @@
 import pydantic
-
-from .schemas import ExperimentalXASMetadata, BatteryChargeMetadata
 from tiled.validation_registration import ValidationError
+
+from .schemas import BatteryChargeMetadata, ExperimentalXASMetadata
 
 
 def validate_xas_tfy(metadata, structure_family, structure, spec):

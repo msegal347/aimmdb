@@ -1,8 +1,6 @@
 import collections.abc
 import copy
-import json
 import os
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict
@@ -10,19 +8,10 @@ from typing import Dict
 import pydantic
 import pymongo
 from fastapi import HTTPException
-from tiled.adapters.utils import IndexersMixin, tree_repr
 from tiled.iterviews import ItemsView, KeysView, ValuesView
-from tiled.queries import Comparison, Eq
 from tiled.query_registration import QueryTranslationRegistry
 from tiled.structures.core import StructureFamily
-from tiled.serialization.dataframe import serialize_arrow
-from tiled.utils import (
-    APACHE_ARROW_FILE_MIME_TYPE,
-    UNCHANGED,
-    DictView,
-    ListView,
-    import_object,
-)
+from tiled.utils import APACHE_ARROW_FILE_MIME_TYPE, UNCHANGED
 
 import aimmdb.queries
 import aimmdb.uid
@@ -31,7 +20,6 @@ from aimmdb.adapters.array import WritingArrayAdapter
 from aimmdb.adapters.dataframe import WritingDataFrameAdapter
 from aimmdb.queries import OperationEnum, parse_path, register_queries_helper
 from aimmdb.schemas import GenericDocument
-from aimmdb.utils import make_dict
 
 _mime_structure_association = {
     StructureFamily.array: "application/x-hdf5",
@@ -249,7 +237,7 @@ class AIMMCatalog(collections.abc.Mapping):
 
         sample.uid = aimmdb.uid.uid()
         result = self.sample_collection.insert_one(sample.dict())
-        assert result.acknowledged == True
+        assert result.acknowledged
         return sample.uid
 
     def delete_sample(self, uid):
