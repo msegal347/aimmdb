@@ -222,6 +222,41 @@ class AIMMCatalog(collections.abc.Mapping):
         """
         return self.query_registry(query, self)
 
+    def get_distinct(self, metadata, structure_families, specs, counts):
+        data = {}
+
+        select = {"$match": self._build_mongo_query(self.op.select)}
+
+        if counts:
+            project = {"$project": {"_id": 0, "value": "$_id", "count": "$count"}}
+        else:
+            project = {"$project": {"_id": 0, "value": "$_id"}}
+
+        if metadata:
+            data["metadata"] = {}
+
+            for metadata_key in metadata:
+                group = {
+                    "$group": {"_id": f"$metadata.{metadata_key}", "count": {"$sum": 1}}
+                }
+                data["metadata"][f"{metadata_key}"] = list(
+                    self.metadata_collection.aggregate([select, group, project])
+                )
+
+        if structure_families:
+            group = {"$group": {"_id": "$structure_family", "count": {"$sum": 1}}}
+            data["structure_families"] = list(
+                self.metadata_collection.aggregate([select, group, project])
+            )
+
+        if specs:
+            group = {"$group": {"_id": "$specs", "count": {"$sum": 1}}}
+            data["specs"] = list(
+                self.metadata_collection.aggregate([select, group, project])
+            )
+
+        return data
+
     def sort(self, sorting):
         return self.new_variation(sorting=sorting)
 
