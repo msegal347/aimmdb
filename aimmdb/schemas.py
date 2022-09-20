@@ -1,5 +1,11 @@
+from argparse import FileType
 from datetime import datetime
+from doctest import _Out
 from enum import Enum
+from importlib.metadata import metadata
+from ossaudiodev import control_labels
+import string
+from symbol import file_input
 from typing import Dict, Generic, List, Optional, TypeVar, Union
 
 import pydantic
@@ -102,6 +108,7 @@ class XDIElement(pydantic.BaseModel):
 class MeasurementEnum(str, Enum):
     xas = "xas"
     rixs = "rixs"
+    feff = "feff"
 
 
 class FacilityMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
@@ -130,6 +137,84 @@ class ExperimentalXASMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     sample_id: Optional[str]
     facility: FacilityMetadata
     beamline: BeamlineMetadata
+
+class XMUDocument(DataFrameStructure):
+    FileType = xmu.dat
+
+class FEFFatoms(pydantic.BaseModel):
+    atoms_values: float
+
+class FEFFcontrol(pydantic.BaseModel):
+    control_labels: int
+
+class FEFFexchange(pydantic.BaseModel):
+    exchange_values: float
+
+class FEFFtitle(pydantic.BaseModel):
+    file_title: Optional[str]
+
+class FEFFrpath(pydantic.BaseModel):
+    rpath_value: int
+
+class FEFFpotentials(pydantic.BaseModel):
+    x: Optional[str]
+    ipot: int
+    Z: str
+    element: int
+    l_scmt: int
+    l_fms: int
+    FEFFpotentials = (x, ipot, Z, element, l_scmt, l_fms)
+    converted_potentials = str(FEFFpotentials)
+
+class FEFFxanes(pydantic.BaseModel):
+    xanes: float
+
+class FEFFedge(pydantic.BaseModel):
+    edge: str
+
+class FEFFscf(pydantic.BaseModel):
+    scf: float
+
+class FEFFfms(pydantic.BaseModel):
+    fms: float
+
+class FEFFS02(pydantic.BaseModel):
+    S02: float
+
+class FEFFcorehole(pydantic.BaseModel):
+    corehole: str    
+
+class FEFFcards(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    atoms: FEFFatoms
+    control: FEFFcontrol
+    exchange: FEFFexchange
+    title: FEFFtitle
+    rpath: FEFFrpath
+    potentials: FEFFpotentials
+    xanes: FEFFxanes
+    edge: FEFFedge
+    scf: FEFFscf
+    fms: FEFFfms
+    S02: FEFFS02
+    corehole: FEFFcorehole
+
+class FEFFDataframe(pydantic.BaseModel):
+    file_input = xmu.dat
+    omega: float
+    e: float
+    k: float
+    mu: float
+    mu0: float
+    chi: float
+    FEFFDataframe_inputs = (omega, e, k, mu, mu0, chi)
+
+   #need to write validation for the Dataframe
+
+class ExperimentalFEFFMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    FileType = feff.out; feff.inp
+    title = feff.inp(pydantic.field("title"))
+    absorbing_atom = feff.inp(pydantic.field("edge"))
+    cards = feff.inp(FEFFcards)
 
 
 class ChargeEnum(str, Enum):
