@@ -110,6 +110,15 @@ class MeasurementEnum(str, Enum):
     rixs = "rixs"
     feff = "feff"
 
+# FIXME require more fields?
+# facility.name?
+# beamline.name?
+class XASMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    element: XDIElement
+    measurement_type: MeasurementEnum = "xas"
+    dataset: str
+    sample_id: Optional[str]
+
 
 class FacilityMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     name: str
@@ -120,6 +129,20 @@ class FacilityMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
         if name not in facilities:
             raise ValueError(f"{name} not a valid facility ({facilities})")
 
+
+# FIXME validate on column names?
+class XASDocument(GenericDocument[XASMetadata]):
+    @pydantic.validator("specs")
+    def check_specs(cls, specs):
+        if "XAS" not in specs:
+            raise ValueError(f"{specs=}")
+        return specs
+
+    @pydantic.validator("structure_family")
+    def check_structure_family(cls, structure_family):
+        if structure_family != StructureFamily.dataframe:
+            raise ValueError(f"{structure_family=}")
+        return structure_family
 
 class BeamlineMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     name: str
