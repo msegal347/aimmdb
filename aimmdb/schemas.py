@@ -1,5 +1,11 @@
+from argparse import FileType
 from datetime import datetime
+from doctest import _Out
 from enum import Enum
+from importlib.metadata import metadata
+from ossaudiodev import control_labels
+import string
+from symbol import file_input
 from typing import Dict, Generic, List, Optional, TypeVar, Union
 
 import pydantic
@@ -102,33 +108,125 @@ class XDIElement(pydantic.BaseModel):
 class MeasurementEnum(str, Enum):
     xas = "xas"
     rixs = "rixs"
+    feff = "feff"
 
 
-# FIXME require more fields?
-# facility.name?
-# beamline.name?
-class XASMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
-    element: XDIElement
-    measurement_type: MeasurementEnum = "xas"
-    dataset: str
-    sample_id: Optional[str]
+class FacilityMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    name: str
+
+    @pydantic.validator("name")
+    def check_name(cls, name):
+        facilities = {"ALS", "APS", "NSLSII", "SSRL"}
+        if name not in facilities:
+            raise ValueError(f"{name} not a valid facility ({facilities})")
 
 
-# FIXME validate on column names?
-class XASDocument(GenericDocument[XASMetadata]):
-    @pydantic.validator("specs")
-    def check_specs(cls, specs):
-        if "XAS" not in specs:
-            raise ValueError(f"{specs=}")
-        return specs
-
-    @pydantic.validator("structure_family")
-    def check_structure_family(cls, structure_family):
-        if structure_family != StructureFamily.dataframe:
-            raise ValueError(f"{structure_family=}")
-        return structure_family
+class BeamlineMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    name: str
 
 
 class SampleData(pydantic.BaseModel, extra=pydantic.Extra.allow):
     uid: Optional[str]
     name: str
+
+
+class ExperimentalXASMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    element: XDIElement
+    measurement_type: MeasurementEnum = pydantic.Field("xas", const=True)
+    dataset: str
+    sample_id: Optional[str]
+    facility: FacilityMetadata
+    beamline: BeamlineMetadata
+
+class XMUDocument(DataFrameStructure):
+    FileType = xmu.dat
+
+class FEFFatoms(pydantic.BaseModel):
+    atoms_values: float
+
+class FEFFcontrol(pydantic.BaseModel):
+    control_labels: int
+
+class FEFFexchange(pydantic.BaseModel):
+    exchange_values: float
+
+class FEFFtitle(pydantic.BaseModel):
+    file_title: Optional[str]
+
+class FEFFrpath(pydantic.BaseModel):
+    rpath_value: int
+
+class FEFFpotentials(pydantic.BaseModel):
+    x: Optional[str]
+    ipot: int
+    Z: str
+    element: int
+    l_scmt: int
+    l_fms: int
+    FEFFpotentials = (x, ipot, Z, element, l_scmt, l_fms)
+    converted_potentials = str(FEFFpotentials)
+
+class FEFFxanes(pydantic.BaseModel):
+    xanes: float
+
+class FEFFedge(pydantic.BaseModel):
+    edge: str
+
+class FEFFscf(pydantic.BaseModel):
+    scf: float
+
+class FEFFfms(pydantic.BaseModel):
+    fms: float
+
+class FEFFS02(pydantic.BaseModel):
+    S02: float
+
+class FEFFcorehole(pydantic.BaseModel):
+    corehole: str    
+
+class FEFFcards(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    atoms: FEFFatoms
+    control: FEFFcontrol
+    exchange: FEFFexchange
+    title: FEFFtitle
+    rpath: FEFFrpath
+    potentials: FEFFpotentials
+    xanes: FEFFxanes
+    edge: FEFFedge
+    scf: FEFFscf
+    fms: FEFFfms
+    S02: FEFFS02
+    corehole: FEFFcorehole
+
+class FEFFDataframe(pydantic.BaseModel):
+    file_input = xmu.dat
+    omega: float
+    e: float
+    k: float
+    mu: float
+    mu0: float
+    chi: float
+    FEFFDataframe_inputs = (omega, e, k, mu, mu0, chi)
+
+   #need to write validation for the Dataframe
+
+class ExperimentalFEFFMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    FileType = feff.out; feff.inp
+    title = feff.inp(pydantic.field("title"))
+    absorbing_atom = feff.inp(pydantic.field("edge"))
+    cards = feff.inp(FEFFcards)
+
+
+class ChargeEnum(str, Enum):
+    C = "C"
+    DC = "DC"
+
+
+class BatteryChargeMetadataInternal(pydantic.BaseModel):
+    cycle: int
+    voltage: float
+    state: ChargeEnum
+
+
+class BatteryChargeMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
+    charge: BatteryChargeMetadataInternal
