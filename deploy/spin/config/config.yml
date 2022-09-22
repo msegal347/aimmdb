@@ -9,6 +9,8 @@ trees:
           - XAS_TFY
           - XAS_TEY
           - XAS_trans
+        newville:
+          - XAS
     access_control:
       access_policy: aimmdb.access:DatasetAccessPolicy
       args:
@@ -95,6 +97,7 @@ uvicorn:
   host: 0.0.0.0
   port: 8000
 validation:
+  XAS: aimmdb.validation:validate_xas_metadata
   XAS_TFY: aimmdb.validation:validate_xas_tfy
   XAS_TEY: aimmdb.validation:validate_xas_tey
   XAS_trans: aimmdb.validation:validate_xas_transmission
