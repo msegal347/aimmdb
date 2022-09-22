@@ -109,7 +109,7 @@ class FacilityMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
 
     @pydantic.validator("name")
     def check_name(cls, name):
-        facilities = {"ALS", "APS", "NSLSII", "SSRL"}
+        facilities = {"ALS", "APS", "NSLS", "NSLSII", "SSRL"}
         if name not in facilities:
             raise ValueError(f"{name} not a valid facility ({facilities})")
 
