@@ -40,6 +40,7 @@ setup(
         "tiled.structure_client": [
             "MongoAdapter = aimmdb.client:MongoCatalog",
             "AIMMCatalog = aimmdb.client:AIMMCatalog",
+            "XAS = aimmdb.client:XASClient",
             "XAS_TEY = aimmdb.client:XASClient",
             "XAS_TFY = aimmdb.client:XASClient",
             "XAS_trans = aimmdb.client:XASClient",
