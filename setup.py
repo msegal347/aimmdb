@@ -26,16 +26,13 @@ setup(
     packages=find_packages(),
     install_requires=[
         "tiled[all]",
+        "psycopg2-binary",
         "pymongo",
         "pyarrow",
-        "psycopg2-binary",
-        "httpx",
-        "strawberry-graphql[fastapi]",
         "h5py",
-        "msgpack",
-        "mongomock",
     ],
-    python_requires="~=3.9",
+    extras_require={"test": ["mongomock", "pytest"]},
+    python_requires=">=3.9",
     entry_points={
         "tiled.structure_client": [
             "MongoAdapter = aimmdb.client:MongoCatalog",
