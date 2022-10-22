@@ -153,9 +153,7 @@ class FEFFpotentials(pydantic.BaseModel, extra=pydantic.Extra.allow):
     element: int
     l_scmt: int
     l_fms: int
-    #FEFFpotentials = (x, ipot, Z, element, l_scmt, l_fms)
-    #converted_potentials = str(FEFFpotentials)
-    #smiles = string
+
 
 class FEFFcards(pydantic.BaseModel, extra=pydantic.Extra.allow):
     atoms: float
@@ -170,28 +168,6 @@ class FEFFcards(pydantic.BaseModel, extra=pydantic.Extra.allow):
     fms: float
     S02: float
     corehole: str
-    #smiles = string
-
-#class FEFFDataFrame(DataFrameStructure):
-    #file_input = "xmu.dat"
-    #omega: float
-    #e: float
-    #k: float
-    #mu: float
-    #mu0: float
-    #chi: float
-    #FEFFDataFrame_inputs = (omega, e, k, mu, mu0, chi)
-    #smiles = string
-
-   #need to write validation for the Dataframe
-
-#class ExperimentalFEFFMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
-    #FileType = "feff.out"; "feff.inp"
-    #measurement_type: MeasurementEnum = pydantic.Field("feff", const=True)
-    #title = measurement_type(pydantic.field("title"))
-    #absorbing_atom = measurement_type(pydantic.field("edge"))
-    #cards = measurement_type(FEFFcards)
-    #smiles = string
 
 class FEFFInputMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     element: XDIElement
@@ -205,6 +181,5 @@ class FEFFOutputMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     measurement_type: MeasurementEnum = pydantic.Field("FEFF", const=True)
     dataset: str
     sample_id: str
-    #change to output log
-    output_script: str
+    output_log: str
 
