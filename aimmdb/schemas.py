@@ -146,14 +146,6 @@ class BatteryChargeMetadataInternal(pydantic.BaseModel):
 class BatteryChargeMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     charge: BatteryChargeMetadataInternal
 
-class FEFFpotentials(pydantic.BaseModel, extra=pydantic.Extra.allow):
-    x: Optional[str]
-    ipot: int
-    Z: str
-    element: int
-    l_scmt: int
-    l_fms: int
-
 
 class FEFFcards(pydantic.BaseModel, extra=pydantic.Extra.allow):
     atoms: float
