@@ -153,7 +153,7 @@ class FEFFcards(pydantic.BaseModel, extra=pydantic.Extra.allow):
     exchange: float
     title: Optional[str]
     rpath: int
-    potentials: FEFFpotentials
+    potentials: float
     xanes: float
     edge: str
     scf: float
