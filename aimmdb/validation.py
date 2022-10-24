@@ -1,7 +1,7 @@
 import pydantic
 from tiled.validation_registration import ValidationError
 
-from .schemas import BatteryChargeMetadata, ExperimentalXASMetadata, ExperimentalFEFFMetadata
+from .schemas import BatteryChargeMetadata, ExperimentalXASMetadata
 
 
 def validate_xas_metadata(metadata, structure_family, structure, spec):
@@ -46,7 +46,7 @@ def validate_battery_charge_data(metadata, structure_family, structure, spec):
     except pydantic.ValidationError as e:
         raise ValidationError(str(e))
 
-def validate_feff(metadata, structure_family, structure, spec):
+def validate_feff_data(data, structure):
     #validate_xas_metadata(metadata, structure_family, structure, spec)
 
     columns = set(structure.macro.columns)

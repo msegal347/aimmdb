@@ -166,12 +166,12 @@ class FEFFInputMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     measurement_type: MeasurementEnum = pydantic.Field("FEFF", const=True)
     dataset: str
     sample_id: str
-    input_script: str
+    #input_script: str
 
 class FEFFOutputMetadata(pydantic.BaseModel, extra=pydantic.Extra.allow):
     element: XDIElement
     measurement_type: MeasurementEnum = pydantic.Field("FEFF", const=True)
     dataset: str
     sample_id: str
-    output_log: str
+    #output_log: str
 
